@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:deep_pick/deep_pick.dart';
 import 'package:dio/dio.dart';
-import 'package:repull/release.dart';
+import 'package:repull/models/release.dart';
 
 class Client {
   final Dio dio = Dio(

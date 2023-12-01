@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:logging/logging.dart';
-import 'package:repull/client.dart';
-import 'package:repull/source.dart';
-import 'package:repull/lock.dart';
-import 'package:repull/logs.dart';
-import 'package:repull/release.dart';
-import 'package:repull/yaml.dart';
+import 'package:repull/logic/client.dart';
+import 'package:repull/logic/logs.dart';
+import 'package:repull/models/lock.dart';
+import 'package:repull/models/release.dart';
+import 'package:repull/models/source.dart';
+import 'package:repull/logic/yaml.dart';
 import 'package:yaml/yaml.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 import 'package:path/path.dart' as paths;
