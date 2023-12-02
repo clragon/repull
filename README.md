@@ -9,7 +9,7 @@ Repull requires a `repull.yaml` config file:
 ```yaml
 sources:
   - repo: user/repo
-    deploy: |-
+    deploy: |
       unzip -o -d /var/www/html my_release.zip
 ```
 
