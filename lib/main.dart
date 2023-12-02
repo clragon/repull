@@ -16,7 +16,7 @@ Future<void> main() {
   return runWithLogs(
     () async {
       const String configFile = 'repull.yaml';
-      const String lockFile = 'repull.lock';
+      String lockFile = '${paths.basenameWithoutExtension(configFile)}.lock';
 
       final logger = Logger('repull');
 
