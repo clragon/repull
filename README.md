@@ -25,3 +25,17 @@ sources:
 ```
 
 The interval defaults to 24 hours.
+
+## Args
+
+You may specify a custom config file path with the `-c` flag:
+
+```bash
+repull -c /somewhere/else/my_config.yaml
+```
+
+You may also ignore the current lock and run a one-time pull with the `-n` flag:
+
+```bash
+repull -n
+```

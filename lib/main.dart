@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:logging/logging.dart';
 import 'package:repull/logic/client.dart';
 import 'package:repull/logic/logs.dart';
@@ -12,13 +13,48 @@ import 'package:yaml/yaml.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 import 'package:path/path.dart' as paths;
 
-Future<void> main() {
+Future<void> main(List<String> arguments) {
   return runWithLogs(
     () async {
-      const String configFile = 'repull.yaml';
+      final logger = Logger('repull');
+
+      final parser = ArgParser()
+        ..addOption(
+          'config',
+          abbr: 'c',
+          defaultsTo: 'repull.yaml',
+          help: 'Path to the configuration file.',
+        )
+        ..addFlag(
+          'now',
+          abbr: 'n',
+          negatable: false,
+          help: 'Execute immediately without delay.',
+        )
+        ..addFlag(
+          'help',
+          abbr: 'h',
+          negatable: false,
+          help: 'Displays this help information.',
+        );
+
+      final args = parser.parse(arguments);
+
+      if (args['help']) {
+        print('Usage: repull [options]');
+        print('Options:');
+        print(parser.usage);
+        return;
+      }
+
+      String configFile = args['config'];
       String lockFile = '${paths.basenameWithoutExtension(configFile)}.lock';
 
-      final logger = Logger('repull');
+      logger.info('Using config file $configFile');
+
+      bool runNow = args['now'];
+
+      logger.info('Running immediatly: ${runNow ? 'yes' : 'no'}');
 
       List<RepullSource> sources = [];
 
@@ -93,19 +129,51 @@ Future<void> main() {
       List<Future<void>> futures = [];
 
       for (final task in tasks.entries) {
-        futures.add(
-          runLoop(
-            task.value.$1,
-            task.value.$2,
-            client,
-            writeLock,
-          ),
-        );
+        if (runNow) {
+          futures.add(
+            runOnce(
+              task.value.$1,
+              task.value.$2,
+              client,
+              writeLock,
+            ),
+          );
+        } else {
+          futures.add(
+            runLoop(
+              task.value.$1,
+              task.value.$2,
+              client,
+              writeLock,
+            ),
+          );
+        }
       }
 
       await futures.wait;
     },
   );
+}
+
+Future<void> runOnce(
+  RepullSource source,
+  RepullLock lock,
+  Client client,
+  void Function(RepullLock) updateLock,
+) async {
+  final logger = Logger('repull:now:${source.repo}');
+
+  logger.info(
+    'Checking for new release. '
+    'Ignoring update intervall. ',
+  );
+
+  RepullLock newLock = await update(source, lock, client);
+
+  if (newLock != lock) {
+    updateLock(newLock);
+    lock = newLock;
+  }
 }
 
 Future<void> runLoop(
