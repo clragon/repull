@@ -26,7 +26,7 @@ sources:
 
 The interval defaults to 24 hours.
 
-You may additionally specify one or multiple regex patterns (one per line) to match against the release tag:
+You may additionally specify one or multiple regex patterns (one per line) to match against the release asset names:
 
 ```yaml
 sources:
