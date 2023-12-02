@@ -7,7 +7,7 @@ import 'package:logging/logging.dart';
 Future<void> runWithLogs(FutureOr Function() fn) async {
   Logger.root.onRecord.listen((record) {
     StringBuffer buffer = StringBuffer();
-    buffer.write(record.time.toIso8601String());
+    buffer.write('[${record.time.toIso8601String()}]');
     buffer.write('[${record.level.name.toLowerCase()}]');
     if (record.loggerName != Logger.root.name) {
       buffer.write('[${record.loggerName}]');

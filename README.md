@@ -21,10 +21,20 @@ You may also specify an optional interval in seconds to check for new releases:
 ```yaml
 sources:
   - repo: # ...
-      interval: 3600 # check every hour
+    interval: 3600 # check every hour
 ```
 
 The interval defaults to 24 hours.
+
+You may additionally specify one or multiple regex patterns (one per line) to match against the release tag:
+
+```yaml
+sources:
+  - repo: # ...
+    regex: |
+      .*_windows.*
+      .*_linux.*
+```
 
 ## Args
 

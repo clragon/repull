@@ -11,6 +11,7 @@ _$RepullSourceImpl _$$RepullSourceImplFromJson(Map<String, dynamic> json) =>
       repo: json['repo'] as String,
       deploy: json['deploy'] as String,
       intervall: json['intervall'] as int? ?? 86400,
+      regex: json['regex'] as String?,
     );
 
 Map<String, dynamic> _$$RepullSourceImplToJson(_$RepullSourceImpl instance) =>
@@ -18,4 +19,5 @@ Map<String, dynamic> _$$RepullSourceImplToJson(_$RepullSourceImpl instance) =>
       'repo': instance.repo,
       'deploy': instance.deploy,
       'intervall': instance.intervall,
+      'regex': instance.regex,
     };

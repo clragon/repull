@@ -9,6 +9,7 @@ class RepullSource with _$RepullSource {
     required String repo,
     required String deploy,
     @Default(86400) int intervall,
+    String? regex,
   }) = _RepullSource;
 
   factory RepullSource.fromJson(Map<String, dynamic> json) =>

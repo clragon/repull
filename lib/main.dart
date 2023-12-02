@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:args/args.dart';
 import 'package:logging/logging.dart';
+import 'package:repull/logic/args.dart';
 import 'package:repull/logic/client.dart';
 import 'package:repull/logic/logs.dart';
+import 'package:repull/logic/loop.dart';
+import 'package:repull/logic/once.dart';
+import 'package:repull/models/args.dart';
 import 'package:repull/models/lock.dart';
-import 'package:repull/models/release.dart';
 import 'package:repull/models/source.dart';
 import 'package:repull/logic/yaml.dart';
 import 'package:yaml/yaml.dart';
@@ -18,41 +20,17 @@ Future<void> main(List<String> arguments) {
     () async {
       final logger = Logger('repull');
 
-      final parser = ArgParser()
-        ..addOption(
-          'config',
-          abbr: 'c',
-          defaultsTo: 'repull.yaml',
-          help: 'Path to the configuration file.',
-        )
-        ..addFlag(
-          'now',
-          abbr: 'n',
-          negatable: false,
-          help: 'Execute immediately without delay.',
-        )
-        ..addFlag(
-          'help',
-          abbr: 'h',
-          negatable: false,
-          help: 'Displays this help information.',
-        );
+      RepullArgs args = parseArgs(arguments);
 
-      final args = parser.parse(arguments);
+      if (args.help) return printHelp();
 
-      if (args['help']) {
-        print('Usage: repull [options]');
-        print('Options:');
-        print(parser.usage);
-        return;
-      }
-
-      String configFile = args['config'];
-      String lockFile = '${paths.basenameWithoutExtension(configFile)}.lock';
+      String configFile = args.config;
 
       logger.info('Using config file $configFile');
 
-      bool runNow = args['now'];
+      String lockFile = '${paths.basenameWithoutExtension(configFile)}.lock';
+
+      bool runNow = args.now;
 
       logger.info('Running immediatly: ${runNow ? 'yes' : 'no'}');
 
@@ -153,175 +131,4 @@ Future<void> main(List<String> arguments) {
       await futures.wait;
     },
   );
-}
-
-Future<void> runOnce(
-  RepullSource source,
-  RepullLock lock,
-  Client client,
-  void Function(RepullLock) updateLock,
-) async {
-  final logger = Logger('repull:now:${source.repo}');
-
-  logger.info(
-    'Checking for new release. '
-    'Ignoring update intervall. ',
-  );
-
-  RepullLock newLock = await update(source, lock, client);
-
-  if (newLock != lock) {
-    updateLock(newLock);
-    lock = newLock;
-  }
-}
-
-Future<void> runLoop(
-  RepullSource source,
-  RepullLock lock,
-  Client client,
-  void Function(RepullLock) updateLock,
-) async {
-  final logger = Logger('repull:loop:${source.repo}');
-
-  while (true) {
-    int intervall = source.intervall * 1000;
-    int sinceLastUpdate =
-        DateTime.now().millisecondsSinceEpoch - (lock.lastUpdate ?? 0);
-
-    int remaining = intervall - sinceLastUpdate;
-
-    if (remaining > 0) {
-      logger.info(
-        'Waiting $remaining ms '
-        'before checking for new release. ',
-      );
-      await Future.delayed(Duration(milliseconds: remaining));
-    }
-
-    logger.info(
-      'Checking for new release. '
-      'Update intervall is $intervall ms. ',
-    );
-
-    if (lock.lastUpdate == null) {
-      logger.info(
-        'Updating for the first time. ',
-      );
-    } else {
-      logger.info(
-        'Updating as it has been $sinceLastUpdate ms '
-        'since the last update. ',
-      );
-    }
-
-    RepullLock newLock = await update(source, lock, client);
-
-    if (newLock != lock) {
-      updateLock(newLock);
-      lock = newLock;
-    }
-  }
-}
-
-Future<RepullLock> update(
-  RepullSource source,
-  RepullLock lock,
-  Client client,
-) async {
-  final logger = Logger('repull:update:${source.repo}');
-
-  SourceRelease release;
-
-  lock = lock.copyWith(
-    lastUpdate: DateTime.now().millisecondsSinceEpoch,
-  );
-
-  try {
-    release = await client.getLatestAssets(source.repo);
-    logger.info('Found release ${release.tag}');
-  } on ClientException catch (e) {
-    logger.severe('Error fetching latest assets:\n$e');
-    return lock;
-  }
-
-  if (release.tag == lock.tag) {
-    logger.info(
-      'No new release found. '
-      'Skipping update. ',
-    );
-    return lock;
-  }
-
-  lock = lock.copyWith(tag: release.tag);
-
-  if (release.assets.isEmpty) {
-    logger.warning('No assets found for ${release.tag}');
-    return lock;
-  }
-
-  Directory sourceDir = Directory(source.repo.split('/').last);
-  sourceDir.createSync();
-
-  for (final asset in release.assets) {
-    String path = paths.join(sourceDir.path, asset.name);
-    logger.info('Downloading ${asset.name} to $path');
-    try {
-      await client.downloadAsset(asset.url, path);
-    } on ClientException catch (e) {
-      logger.severe('Error downloading ${asset.name}:\n$e');
-      return lock;
-    }
-  }
-
-  Duration timeout = Duration(seconds: 60);
-
-  ProcessResult result;
-
-  File? deployScript;
-
-  try {
-    if (Platform.isWindows) {
-      deployScript = File(paths.join(sourceDir.path, '.deploy.bat'));
-      deployScript.writeAsStringSync(source.deploy);
-      print(deployScript.path);
-      result = await Process.run(
-        'cmd',
-        [paths.basename(deployScript.path)],
-        workingDirectory: sourceDir.path,
-      ).timeout(timeout);
-    } else if (Platform.isMacOS || Platform.isLinux) {
-      deployScript = File(paths.join(sourceDir.path, '.deploy.sh'));
-      deployScript.writeAsStringSync(source.deploy);
-      result = await Process.run(
-        'sh',
-        [paths.basename(deployScript.path)],
-        workingDirectory: sourceDir.path,
-      ).timeout(timeout);
-    } else {
-      logger.severe(
-        'Script execution is not supported '
-        'on ${Platform.operatingSystem}',
-      );
-      throw ExitException(1);
-    }
-  } on TimeoutException {
-    logger.severe(
-      'Error deploying ${release.tag}:\n'
-      'Process timed out after $timeout',
-    );
-    throw ExitException(1);
-  } finally {
-    deployScript?.deleteSync();
-  }
-
-  if (result.exitCode != 0) {
-    logger.severe(
-      'Error deploying ${release.tag}:\n'
-      '${result.stderr}',
-    );
-    throw ExitException(result.exitCode);
-  }
-
-  return lock;
 }

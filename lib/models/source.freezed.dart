@@ -23,6 +23,7 @@ mixin _$RepullSource {
   String get repo => throw _privateConstructorUsedError;
   String get deploy => throw _privateConstructorUsedError;
   int get intervall => throw _privateConstructorUsedError;
+  String? get regex => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -36,7 +37,7 @@ abstract class $RepullSourceCopyWith<$Res> {
           RepullSource value, $Res Function(RepullSource) then) =
       _$RepullSourceCopyWithImpl<$Res, RepullSource>;
   @useResult
-  $Res call({String repo, String deploy, int intervall});
+  $Res call({String repo, String deploy, int intervall, String? regex});
 }
 
 /// @nodoc
@@ -55,6 +56,7 @@ class _$RepullSourceCopyWithImpl<$Res, $Val extends RepullSource>
     Object? repo = null,
     Object? deploy = null,
     Object? intervall = null,
+    Object? regex = freezed,
   }) {
     return _then(_value.copyWith(
       repo: null == repo
@@ -69,6 +71,10 @@ class _$RepullSourceCopyWithImpl<$Res, $Val extends RepullSource>
           ? _value.intervall
           : intervall // ignore: cast_nullable_to_non_nullable
               as int,
+      regex: freezed == regex
+          ? _value.regex
+          : regex // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -81,7 +87,7 @@ abstract class _$$RepullSourceImplCopyWith<$Res>
       __$$RepullSourceImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String repo, String deploy, int intervall});
+  $Res call({String repo, String deploy, int intervall, String? regex});
 }
 
 /// @nodoc
@@ -98,6 +104,7 @@ class __$$RepullSourceImplCopyWithImpl<$Res>
     Object? repo = null,
     Object? deploy = null,
     Object? intervall = null,
+    Object? regex = freezed,
   }) {
     return _then(_$RepullSourceImpl(
       repo: null == repo
@@ -112,6 +119,10 @@ class __$$RepullSourceImplCopyWithImpl<$Res>
           ? _value.intervall
           : intervall // ignore: cast_nullable_to_non_nullable
               as int,
+      regex: freezed == regex
+          ? _value.regex
+          : regex // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -120,7 +131,10 @@ class __$$RepullSourceImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$RepullSourceImpl implements _RepullSource {
   const _$RepullSourceImpl(
-      {required this.repo, required this.deploy, this.intervall = 86400});
+      {required this.repo,
+      required this.deploy,
+      this.intervall = 86400,
+      this.regex});
 
   factory _$RepullSourceImpl.fromJson(Map<String, dynamic> json) =>
       _$$RepullSourceImplFromJson(json);
@@ -132,10 +146,12 @@ class _$RepullSourceImpl implements _RepullSource {
   @override
   @JsonKey()
   final int intervall;
+  @override
+  final String? regex;
 
   @override
   String toString() {
-    return 'RepullSource(repo: $repo, deploy: $deploy, intervall: $intervall)';
+    return 'RepullSource(repo: $repo, deploy: $deploy, intervall: $intervall, regex: $regex)';
   }
 
   @override
@@ -146,12 +162,13 @@ class _$RepullSourceImpl implements _RepullSource {
             (identical(other.repo, repo) || other.repo == repo) &&
             (identical(other.deploy, deploy) || other.deploy == deploy) &&
             (identical(other.intervall, intervall) ||
-                other.intervall == intervall));
+                other.intervall == intervall) &&
+            (identical(other.regex, regex) || other.regex == regex));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, repo, deploy, intervall);
+  int get hashCode => Object.hash(runtimeType, repo, deploy, intervall, regex);
 
   @JsonKey(ignore: true)
   @override
@@ -171,7 +188,8 @@ abstract class _RepullSource implements RepullSource {
   const factory _RepullSource(
       {required final String repo,
       required final String deploy,
-      final int intervall}) = _$RepullSourceImpl;
+      final int intervall,
+      final String? regex}) = _$RepullSourceImpl;
 
   factory _RepullSource.fromJson(Map<String, dynamic> json) =
       _$RepullSourceImpl.fromJson;
@@ -182,6 +200,8 @@ abstract class _RepullSource implements RepullSource {
   String get deploy;
   @override
   int get intervall;
+  @override
+  String? get regex;
   @override
   @JsonKey(ignore: true)
   _$$RepullSourceImplCopyWith<_$RepullSourceImpl> get copyWith =>
