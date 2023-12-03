@@ -62,7 +62,7 @@ jobs:
               dart compile exe lib/main.dart -o ${{ matrix.artifact_name }}"
 
       - name: upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_name }}
@@ -79,11 +79,14 @@ jobs:
         with:
           path: artifacts
 
+      - name: get version
+        run: echo "VERSION=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
+
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.run_id }}
+          tag_name: ${{ env.VERSION }}
           files: artifacts/repull-*/repull-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
