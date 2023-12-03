@@ -34,6 +34,10 @@ jobs:
         if: matrix.qemu_arch == ''
         uses: dart-lang/setup-dart@v1
 
+      - name: get dependencies
+        if: matrix.qemu_arch == ''
+        run: dart pub get
+
       - name: build application
         if: matrix.qemu_arch == ''
         run: dart compile exe lib/main.dart -o ${{ matrix.artifact_name }}
@@ -47,7 +51,15 @@ jobs:
       - name: build application in docker
         if: matrix.qemu_arch != ''
         run: |
-          docker run --rm --platform linux/${{ matrix.qemu_arch }} -v $(pwd):/app -w /app dart:stable dart compile exe lib/main.dart -o ${{ matrix.artifact_name }}
+          docker run \
+            --rm \
+            --platform linux/${{ matrix.qemu_arch }} \
+            -v "$(pwd)":/app \
+            -w /app \
+            dart:stable \
+            /bin/bash -c "\
+              dart pub get && \
+              dart compile exe lib/main.dart -o ${{ matrix.artifact_name }}"
           mv /app/${{ matrix.artifact_name }} .
 
       - name: upload artifact
