@@ -1,3 +1,4 @@
+import 'package:duration/duration.dart';
 import 'package:logging/logging.dart';
 import 'package:repull/logic/client.dart';
 import 'package:repull/logic/update.dart';
@@ -21,7 +22,7 @@ Future<void> runLoop(
 
     if (remaining > 0) {
       logger.info(
-        'Waiting $remaining ms '
+        'Waiting ${prettyDuration(Duration(milliseconds: remaining))} '
         'before checking for new release. ',
       );
       await Future.delayed(Duration(milliseconds: remaining));
@@ -29,7 +30,7 @@ Future<void> runLoop(
 
     logger.info(
       'Checking for new release. '
-      'Update intervall is $intervall ms. ',
+      'Update intervall is ${prettyDuration(Duration(milliseconds: intervall))}. ',
     );
 
     if (lock.lastUpdate == null) {
@@ -38,7 +39,7 @@ Future<void> runLoop(
       );
     } else {
       logger.info(
-        'Updating as it has been $sinceLastUpdate ms '
+        'Updating as it has been ${prettyDuration(Duration(milliseconds: sinceLastUpdate))} '
         'since the last update. ',
       );
     }
