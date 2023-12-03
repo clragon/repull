@@ -1,0 +1,78 @@
+name: release
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            artifact_name: repull-windows
+            qemu_arch: ""
+          - os: ubuntu-latest
+            platform: linux-amd64
+            artifact_name: repull-linux-amd64
+            qemu_arch: ""
+          - os: ubuntu-latest
+            platform: linux-arm64
+            artifact_name: repull-linux-arm64
+            qemu_arch: aarch64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: set up dart SDK
+        if: matrix.qemu_arch == ''
+        uses: dart-lang/setup-dart@v1
+
+      - name: build application
+        if: matrix.qemu_arch == ''
+        run: dart compile exe lib/main.dart -o ${{ matrix.artifact_name }}
+
+      - name: set up QEMU
+        if: matrix.qemu_arch != ''
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.qemu_arch }}
+
+      - name: build application in docker
+        if: matrix.qemu_arch != ''
+        run: |
+          docker run --rm --platform linux/${{ matrix.qemu_arch }} -v $(pwd):/app -w /app dart:stable dart compile exe lib/main.dart -o ${{ matrix.artifact_name }}
+          mv /app/${{ matrix.artifact_name }} .
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}
+
+  create_release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: create release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.run_id }}
+          files: artifacts/repull-*/repull-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
