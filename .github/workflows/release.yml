@@ -11,10 +11,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            platform: windows
-            artifact_name: repull-windows
-            qemu_arch: ""
+          # - os: windows-latest
+          #   platform: windows
+          #   artifact_name: repull-windows
+          #   qemu_arch: ""
           - os: ubuntu-latest
             platform: linux-amd64
             artifact_name: repull-linux-amd64
@@ -60,7 +60,6 @@ jobs:
             /bin/bash -c "\
               dart pub get && \
               dart compile exe lib/main.dart -o ${{ matrix.artifact_name }}"
-          mv /app/${{ matrix.artifact_name }} .
 
       - name: upload artifact
         uses: actions/upload-artifact@v2
