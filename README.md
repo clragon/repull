@@ -49,3 +49,19 @@ You may also ignore the current lock and run a one-time pull with the `-n` flag:
 ```bash
 repull -n
 ```
+
+## Behaviour
+
+Repull will run a loop for each repo in your config file.
+
+When a network error is encountered, repull will continue its cycle as normal.
+This is to prevent faulty network connections from halting the entire process.
+
+If a deploy script fails (exit code != 0), repull will exit with the same exit code.
+This is because we assume a failure in the deploy script means developer intervention is required.
+If youre deploy script may fail but you wish to continue, please handle those failures in the deploy script.
+
+## Logging
+
+Repull logs to stdout and stderr.
+All actions have comprehensive logs with timestamps, log levels, and source repo names.
